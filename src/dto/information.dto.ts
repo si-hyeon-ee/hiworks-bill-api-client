@@ -1,58 +1,59 @@
 import { Transform } from "class-transformer";
-import { IsNotEmpty, IsNumber, IsOptional, IsString,Matches } from "class-validator";
+import { IsNotEmpty, IsNumber, IsOptional, IsString, Matches } from "class-validator";
 
 export class Information {
-    
+
     @IsNotEmpty()
     @Matches(/\d{4}-\d{2}-\d{2}/)
     @IsString()
-    issueDate!:string
+    issueDate!: string
 
     @IsString()
     @IsOptional()
-    memo?:string
+    memo?: string
+
+    @Matches(/\d?-\d?/)
+    @IsString()
+    @IsOptional()
+    bookNo?: string
 
     @IsString()
     @IsOptional()
-    bookNo?:string
+    serial?: string
 
     @IsString()
     @IsOptional()
-    serial?:string
+    description?: string
 
-    @IsString()
-    @IsOptional()
-    description?:string
-
-    @Transform(value=>Number(value))
+    @Transform(value => String(value))
     @IsNumber()
     @IsOptional()
-    cash?:number
+    cash?: number
 
-    @Transform(value=>Number(value))
+    @Transform(value => String(value))
     @IsNumber()
     @IsOptional()
-    check?:number
+    check?: number
 
-    @Transform(value=>Number(value))
+    @Transform(value => String(value))
     @IsNumber()
     @IsOptional()
-    draft?:number
+    draft?: number
 
-    @Transform(value=>Number(value))
+    @Transform(value => String(value))
     @IsNumber()
     @IsOptional()
-    uncollected?:number
+    uncollected?: number
 
     @Matches(/\d{18}|-\d{17}/)
     @IsString()
     @IsNotEmpty()
-    totalSupplyPrice!:string
+    totalSupplyPrice!: string
 
     @Matches(/\d{18}|-\d{17}/)
     @IsString()
     @IsNotEmpty()
-    totalTax!:string
-    
-    constructor(part?:Partial<Information>) { if(part) Object.assign(this, part) }
+    totalTax!: string
+
+    constructor(part?: Partial<Information>) { if (part) Object.assign(this, part) }
 }

@@ -1,15 +1,26 @@
+import { IsIn, IsNotEmpty, IsNotEmptyObject, IsObject, IsOptional, IsString, ValidateNested } from "class-validator"
 import { Contact } from "./contact.dto"
+import { Contractor } from "./contractor.dto"
 
-export class Invoicee {
-    companyNumber!: string
-    taxNumber?: string
-    ceoName!: string
-    companyName!: string
-    companyAddress?: string
-    bizType?: string
-    bizClassification?: string
-    partyTYpeCode?: "01" | "02" | "03"
+export class Invoicee extends Contractor {
+
+    @IsIn(["01","02","03"])
+    @IsString()
+    @IsOptional()
+    partyTypeCode?: "01" | "02" | "03"
+
+    @IsObject()
+    @IsNotEmptyObject()
+    @IsNotEmpty()
+    @ValidateNested()
     primaryContact!: Contact
+
+    @IsObject()
+    @ValidateNested()
+    @IsOptional()
     secondaryContact?: Contact
-    constructor(part?: Partial<Invoicee>) { if (part) Object.assign(this, part) }
+    constructor(part?: Partial<Invoicee>) {
+        super(part)
+        if (part) Object.assign(this, part)
+    }
 }
