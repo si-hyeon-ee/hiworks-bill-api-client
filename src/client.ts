@@ -1,4 +1,10 @@
 import Axios, { AxiosInstance } from "axios";
+import { CreateInvoice } from "./dto/create-invoice.dto";
+import { HiworksError } from "./dto/hiworks-error.dto";
+import { HiworksRequest } from "./dto/hiworks-request.dto";
+import { HiworksResponse } from "./dto/hiworks-response.dto";
+import { HiworksValidationError } from "./dto/hiworks-validation-error.dto";
+import { ResponseCreateInvoice } from "./dto/response-create-invoice.dto";
 
 
 interface Token {
@@ -27,15 +33,28 @@ export class Client {
         })
     }
 
-    async invoiceCreateOne(payload:any){
-        return await this.http.post(`/v4/invoices`,payload)
+    async invoiceCreateOne(data: CreateInvoice) {
+        const payload = new HiworksRequest<CreateInvoice>({ data })
+        const response = await this.http.post<HiworksResponse<ResponseCreateInvoice>|HiworksValidationError>(`/v4/invoices`, payload)
+        if (response.status == 503) throw new Error("점검중입니다")
+        if(this.isValidationError(response.data)) return response.data.errors
+        return response.data.data
     }
 
-    async invoiceFindOne(documentID:string) {
-        return await this.http.get(`/v4/invoices/${documentID}`)
+    async invoiceFindOne(documentID: string) {
+        const response = await this.http.get<HiworksResponse<any>>(`/v4/invoices/${documentID}`)
+        if (response.status == 503) throw new Error("점검중입니다")
+        return response.data.data
     }
 
-    async invoiceDeleteOne(documentID:string) {
-        return await this.http.delete(`/v4/invoices/${documentID}`)
+    async invoiceDeleteOne(documentID: string) {
+        const response = await this.http.delete<undefined|HiworksResponse<HiworksError>>(`/v4/invoices/${documentID}`)
+        if (response.status == 503) throw new Error("점검중입니다")
+        return response.status == 302 ? true : response.data?.data
+    }
+
+
+    protected isValidationError(data:HiworksResponse<ResponseCreateInvoice>|HiworksValidationError): data is HiworksValidationError {
+        return (<HiworksValidationError>data).errors !== undefined
     }
 }
