@@ -60,7 +60,7 @@ export class Client {
 
     async amendmentCreateOne(data: CreateAmendmentInvoice) {
         const payload = new HiworksRequest<CreateAmendmentInvoice>({ data })
-        const response = await this.http.post<HiworksResponse<ResponseCreateInvoice> | HiworksValidationError>(`/v4/amendment`)
+        const response = await this.http.post<HiworksResponse<ResponseCreateInvoice> | HiworksValidationError>(`/v4/invoices/amendment`, payload)
         if (response.status == 503) throw new Error("점검중입니다")
         if (this.isValidationError(response.data)) return response.data.errors
         return response.data.data
