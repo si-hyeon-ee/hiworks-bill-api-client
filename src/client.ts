@@ -1,4 +1,5 @@
 import Axios, { AxiosInstance } from "axios";
+import { validateOrReject } from "class-validator";
 import { CreateAmendmentInvoice } from "./dto/create-amendment-invoice.dto";
 import { CreateInvoice } from "./dto/create-invoice.dto";
 import { HiworksError } from "./dto/hiworks-error.dto";
@@ -13,7 +14,6 @@ interface Token {
     office: string
     access: string
 }
-
 
 export class Client {
     protected readonly http: AxiosInstance
@@ -38,7 +38,8 @@ export class Client {
         if (resellerCode !== undefined) this.http.defaults.headers['X-Reseller-Code'] = resellerCode
     }
 
-    async invoiceCreateOne(data: CreateInvoice) {
+    async invoiceCreateOne(data: CreateInvoice, withValidation?: true) {
+        if (withValidation) await validateOrReject(data)
         const payload = new HiworksRequest<CreateInvoice>({ data })
         const response = await this.http.post<HiworksResponse<ResponseCreateInvoice> | HiworksValidationError>(`/v4/invoices`, payload)
         if (response.status == 503) throw new Error("점검중입니다")
@@ -58,7 +59,8 @@ export class Client {
         return response.status == 302 ? true : response.data?.data
     }
 
-    async amendmentCreateOne(data: CreateAmendmentInvoice) {
+    async amendmentCreateOne(data: CreateAmendmentInvoice, withValidation?: true) {
+        if (withValidation) await validateOrReject(data)
         const payload = new HiworksRequest<CreateAmendmentInvoice>({ data })
         const response = await this.http.post<HiworksResponse<ResponseCreateInvoice> | HiworksValidationError>(`/v4/invoices/amendment`, payload)
         if (response.status == 503) throw new Error("점검중입니다")
