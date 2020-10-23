@@ -1,10 +1,12 @@
 import Axios, { AxiosInstance } from "axios";
+import { CreateAmendmentInvoice } from "./dto/create-amendment-invoice.dto";
 import { CreateInvoice } from "./dto/create-invoice.dto";
 import { HiworksError } from "./dto/hiworks-error.dto";
 import { HiworksRequest } from "./dto/hiworks-request.dto";
 import { HiworksResponse } from "./dto/hiworks-response.dto";
 import { HiworksValidationError } from "./dto/hiworks-validation-error.dto";
 import { ResponseCreateInvoice } from "./dto/response-create-invoice.dto";
+import { ResponseInvoice } from "./dto/response-invoice.dto";
 
 
 interface Token {
@@ -15,9 +17,10 @@ interface Token {
 
 export class Client {
     protected readonly http: AxiosInstance
-    constructor({ url, tokens }: {
+    constructor({ url, tokens, resellerCode }: {
         url: string,
-        tokens: Token
+        tokens: Token,
+        resellerCode?: string
     }) {
         this.http = Axios.create({
             baseURL: url,
@@ -31,30 +34,40 @@ export class Client {
                 return false
             }
         })
+
+        if (resellerCode !== undefined) this.http.defaults.headers['X-Reseller-Code'] = resellerCode
     }
 
     async invoiceCreateOne(data: CreateInvoice) {
         const payload = new HiworksRequest<CreateInvoice>({ data })
-        const response = await this.http.post<HiworksResponse<ResponseCreateInvoice>|HiworksValidationError>(`/v4/invoices`, payload)
+        const response = await this.http.post<HiworksResponse<ResponseCreateInvoice> | HiworksValidationError>(`/v4/invoices`, payload)
         if (response.status == 503) throw new Error("점검중입니다")
-        if(this.isValidationError(response.data)) return response.data.errors
+        if (this.isValidationError(response.data)) return response.data.errors
         return response.data.data
     }
 
     async invoiceFindOne(documentID: string) {
-        const response = await this.http.get<HiworksResponse<any>>(`/v4/invoices/${documentID}`)
+        const response = await this.http.get<HiworksResponse<ResponseInvoice>>(`/v4/invoices/${documentID}`)
         if (response.status == 503) throw new Error("점검중입니다")
         return response.data.data
     }
 
     async invoiceDeleteOne(documentID: string) {
-        const response = await this.http.delete<undefined|HiworksResponse<HiworksError>>(`/v4/invoices/${documentID}`)
+        const response = await this.http.delete<undefined | HiworksResponse<HiworksError>>(`/v4/invoices/${documentID}`)
         if (response.status == 503) throw new Error("점검중입니다")
         return response.status == 302 ? true : response.data?.data
     }
 
+    async amendmentCreateOne(data: CreateAmendmentInvoice) {
+        const payload = new HiworksRequest<CreateAmendmentInvoice>({ data })
+        const response = await this.http.post<HiworksResponse<ResponseCreateInvoice> | HiworksValidationError>(`/v4/amendment`)
+        if (response.status == 503) throw new Error("점검중입니다")
+        if (this.isValidationError(response.data)) return response.data.errors
+        return response.data.data
+    }
 
-    protected isValidationError(data:HiworksResponse<ResponseCreateInvoice>|HiworksValidationError): data is HiworksValidationError {
+
+    protected isValidationError(data: HiworksResponse<ResponseCreateInvoice> | HiworksValidationError): data is HiworksValidationError {
         return (<HiworksValidationError>data).errors !== undefined
     }
 }
